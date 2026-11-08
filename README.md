@@ -37,7 +37,7 @@
 
 ## 公開（GitHub Pages）
 
-`main` に push すると `.github/workflows/pages.yml` がテスト・ビルドして Pages にデプロイします。
+既定ブランチに push すると `.github/workflows/pages.yml` がテスト・ビルドして Pages にデプロイします。
 初回のみ、リポジトリの **Settings → Pages → Source を「GitHub Actions」** にしてください。
 
 ## カラオケ（音声認識）の対応環境

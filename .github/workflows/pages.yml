@@ -2,7 +2,6 @@ name: Build & Deploy (GitHub Pages)
 
 on:
   push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -26,12 +25,13 @@ jobs:
       - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
         with:
           path: dist
 
+  # 既定ブランチ(main など)に push されたときだけ公開する
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
     needs: build
     runs-on: ubuntu-latest
     permissions:
