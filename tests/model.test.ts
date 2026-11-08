@@ -54,8 +54,9 @@ describe('tree', () => {
 describe('merge', () => {
   const base = () => {
     const d = emptyData();
-    d.interviews.push(createInterview({ id: 'i', title: 'A', updatedAt: 10 }));
-    d.questions.push(createQuestion('i', { id: 'q1', text: 'q1', updatedAt: 10 }));
+    // 時刻を固定する（Date.now() だと 2 回の base() 呼び出しの間でミリ秒がずれて不安定になる）
+    d.interviews.push(createInterview({ id: 'i', title: 'A', createdAt: 1, updatedAt: 10 }));
+    d.questions.push(createQuestion('i', { id: 'q1', text: 'q1', order: 1, createdAt: 1, updatedAt: 10 }));
     return d;
   };
 
