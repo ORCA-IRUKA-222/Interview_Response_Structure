@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { allTags, ancestorsOf, childrenOf, makeAnchor } from '../lib/model';
+import { allTags, ancestorsOf, childrenOf, interviewName, makeAnchor } from '../lib/model';
 import { addQuestion, deleteQuestion, updateQuestion, useAppState } from '../lib/store';
 import type { Question } from '../types';
 import { AutoTextarea, selectionOffsets, StatusDot, STATUS_LABEL, TagEditor } from './common';
@@ -178,7 +178,7 @@ export function QuestionDetail({ iid, qid }: { iid: string; qid: string }) {
         <a class="btn back" href={paths.interview(iid)}>
           ← 質問一覧
         </a>
-        <span class="grow muted crumb-company">{interview?.company || interview?.title}</span>
+        <span class="grow muted crumb-company">{interview ? (interview.kind === 'common' ? '📌 共通' : interviewName(interview, '')) : ''}</span>
         <a class={`btn ${q.answer.trim() ? '' : 'disabled'}`} href={q.answer.trim() ? paths.karaoke(q.id) : undefined} aria-disabled={!q.answer.trim()}>
           🎤 カラオケ
         </a>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { allTags, keyPointLines } from '../lib/model';
+import { allTags, interviewName, keyPointLines } from '../lib/model';
 import { gradeQuestion, useAppState } from '../lib/store';
 import { buildDeck, isDue, todayString, type DeckOptions } from '../lib/srs';
 import type { Question } from '../types';
@@ -30,7 +30,7 @@ function Card({ q, flipped, onFlip }: { q: Question; flipped: boolean; onFlip():
       <div class="flip-inner">
         <div class="face front">
           <div class="face-meta muted">
-            {interview?.company || interview?.title}
+            {interview ? (interview.kind === 'common' ? '📌 共通' : interviewName(interview, '')) : ''}
             {q.tags.map((t) => (
               <span class="chip small" key={t}>
                 #{t}
@@ -158,7 +158,7 @@ export function Study({ iid, tag }: { iid?: string; tag?: string }) {
             <option value="">すべて</option>
             {data.interviews.map((i) => (
               <option value={i.id} key={i.id}>
-                {i.company || i.title || '(無題)'}
+                {i.kind === 'common' ? '📌 共通' : interviewName(i, '(無題)')}
               </option>
             ))}
           </select>

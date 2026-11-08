@@ -1,12 +1,15 @@
 import type { Data, Interview, Question } from '../types';
-import { flattenTree, keyPointLines } from './model';
+import { flattenTree, interviewName, keyPointLines } from './model';
 
 const STAGE = { preparing: '準備中', done: '実施済み' } as const;
 const STATUS = { todo: '未回答', draft: '下書き', done: '完成' } as const;
 
 function interviewMarkdown(interview: Interview, questions: Question[]): string {
   const lines: string[] = [];
-  const name = [interview.company, interview.title].filter(Boolean).join(' / ') || '(無題の面接)';
+  const name =
+    interview.kind === 'common'
+      ? interviewName(interview)
+      : [interview.company, interview.title].filter(Boolean).join(' / ') || '(無題の面接)';
   lines.push(`# ${name}`);
   const meta = [interview.date, STAGE[interview.stage]].filter(Boolean).join(' ・ ');
   lines.push('', `> ${meta}`);

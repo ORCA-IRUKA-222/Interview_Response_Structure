@@ -78,6 +78,7 @@ export function parseData(raw: unknown): Data {
     if (!it || typeof it.id !== 'string') continue;
     data.interviews.push({
       id: it.id,
+      ...(it.kind === 'common' ? { kind: 'common' as const } : {}),
       title: str(it.title),
       company: str(it.company),
       date: str(it.date),

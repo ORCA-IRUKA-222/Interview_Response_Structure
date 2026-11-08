@@ -6,6 +6,14 @@ export function newId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+/** 共通フォルダの固定 id。端末ごとに別々に作られても同じものとして統合される */
+export const COMMON_ID = 'common';
+
+export function interviewName(i: Pick<Interview, 'kind' | 'company' | 'title'>, fallback = '(無題の面接)'): string {
+  if (i.kind === 'common') return '共通';
+  return i.company || i.title || fallback;
+}
+
 export function emptyData(): Data {
   return { version: 1, interviews: [], questions: [], deleted: {} };
 }
@@ -45,6 +53,39 @@ export function createQuestion(
     updatedAt: now,
     ...init,
   };
+}
+
+/**
+ * 質問とその深掘り(子孫)を別の面接へ複製する。引用(anchor)は子孫ではそのまま保つ。
+ * 学習状態は引き継がない。戻り値の rootId が複製した最上位の質問。
+ */
+export function copySubtree(
+  questions: Question[],
+  sourceId: string,
+  targetInterviewId: string,
+  parentId: string | null = null,
+  now = Date.now(),
+): { copies: Question[]; rootId: string } {
+  const ids = descendantIds(questions, sourceId);
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  const idMap = new Map(ids.map((id) => [id, newId()]));
+  const copies = ids.map((id, index): Question => {
+    const q = byId.get(id)!;
+    const isRoot = id === sourceId;
+    return {
+      ...q,
+      id: idMap.get(id)!,
+      interviewId: targetInterviewId,
+      parentId: isRoot ? parentId : (idMap.get(q.parentId ?? '') ?? null),
+      anchor: isRoot ? null : q.anchor,
+      tags: [...q.tags],
+      card: { box: 0, due: null, seen: 0 },
+      order: now + index,
+      createdAt: now,
+      updatedAt: now,
+    };
+  });
+  return { copies, rootId: idMap.get(sourceId)! };
 }
 
 export function childrenOf(questions: Question[], interviewId: string, parentId: string | null) {

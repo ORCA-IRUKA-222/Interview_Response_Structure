@@ -42,6 +42,8 @@ export type Stage = 'preparing' | 'done';
 
 export interface Interview {
   id: string;
+  /** 'common' は全面接から参照できる「共通」の親。会社ごとの面接はその下に並ぶ */
+  kind?: 'common';
   title: string;
   company: string;
   /** YYYY-MM-DD または空 */

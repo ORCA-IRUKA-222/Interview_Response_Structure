@@ -1,4 +1,5 @@
 import type { Data, Interview, Question } from '../types';
+import { interviewName } from './model';
 import { normalize, normalizeToString } from './text/normalizer';
 
 export interface SearchHit {
@@ -10,7 +11,7 @@ export interface SearchHit {
 }
 
 /** 全角/半角・ひらがな/カタカナ・大小文字を無視して検索する。空白区切りは AND */
-export function search(data: Data, query: string, tag?: string): SearchHit[] {
+export function search(data: Data, query: string, tag?: string, opts: { interviewId?: string } = {}): SearchHit[] {
   const terms = query
     .split(/\s+/)
     .map(normalizeToString)
@@ -23,6 +24,7 @@ export function search(data: Data, query: string, tag?: string): SearchHit[] {
   for (const q of data.questions) {
     const interview = interviews.get(q.interviewId);
     if (!interview) continue;
+    if (opts.interviewId && q.interviewId !== opts.interviewId) continue;
     if (tag && !q.tags.includes(tag)) continue;
 
     const fields: [SearchHit['field'], string][] = [
@@ -30,7 +32,7 @@ export function search(data: Data, query: string, tag?: string): SearchHit[] {
       ['answer', q.answer],
       ['keyPoints', q.keyPoints],
       ['tags', q.tags.join(' ')],
-      ['interview', `${interview.company} ${interview.title}`],
+      ['interview', `${interviewName(interview, '')} ${interview.title}`],
     ];
     const normalized = fields.map(([f, s]) => [f, s, normalize(s)] as const);
     const joined = normalized.map(([, , n]) => n.chars.join('')).join('\u0000');

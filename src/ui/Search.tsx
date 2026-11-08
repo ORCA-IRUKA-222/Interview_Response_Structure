@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { allTags } from '../lib/model';
+import { allTags, COMMON_ID, interviewName } from '../lib/model';
 import { search } from '../lib/search';
 import { useAppState } from '../lib/store';
 import { StatusDot } from './common';
@@ -11,8 +11,12 @@ export function Search({ q: initialQ, tag: initialTag }: { q: string; tag?: stri
   const { data } = useAppState();
   const [q, setQ] = useState(initialQ);
   const [tag, setTag] = useState<string | undefined>(initialTag);
+  const [commonOnly, setCommonOnly] = useState(false);
   const tags = allTags(data.questions);
-  const hits = useMemo(() => search(data, q, tag), [data, q, tag]);
+  const hits = useMemo(
+    () => search(data, q, tag, commonOnly ? { interviewId: COMMON_ID } : {}),
+    [data, q, tag, commonOnly],
+  );
 
   const update = (nextQ: string, nextTag: string | undefined) => {
     setQ(nextQ);
@@ -37,6 +41,10 @@ export function Search({ q: initialQ, tag: initialTag }: { q: string; tag?: stri
         aria-label="検索語"
         onInput={(e) => update((e.target as HTMLInputElement).value, tag)}
       />
+      <label class="check scope-check">
+        <input type="checkbox" checked={commonOnly} onChange={(e) => setCommonOnly((e.target as HTMLInputElement).checked)} />
+        共通の質問だけ検索する
+      </label>
       {tags.length > 0 && (
         <div class="tags filter-tags">
           {tags.map((t) => (
@@ -67,7 +75,9 @@ export function Search({ q: initialQ, tag: initialTag }: { q: string; tag?: stri
                     <StatusDot status={h.question.status} /> {h.question.text || '(質問未入力)'}
                   </span>
                   <span class="row-sub muted">
-                    <span class="badge">{h.interview.company || h.interview.title}</span>
+                    <span class={`badge ${h.interview.kind === 'common' ? 'common' : ''}`}>
+                      {h.interview.kind === 'common' ? '📌 共通' : interviewName(h.interview, '')}
+                    </span>
                     {h.field !== 'text' && (
                       <span>
                         {FIELD_LABEL[h.field]}: {h.snippet}

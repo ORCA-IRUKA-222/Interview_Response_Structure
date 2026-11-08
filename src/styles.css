@@ -671,6 +671,95 @@ button.chip {
   color: var(--muted);
 }
 
+/* ---------- 共通フォルダ ---------- */
+
+.common-list {
+  margin-bottom: 6px;
+}
+
+.list .row.common-row {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+}
+
+.under-common {
+  margin-left: 14px;
+  padding-left: 12px;
+  border-left: 2px solid var(--accent-soft);
+}
+
+.group-label {
+  margin: 2px 0 8px;
+}
+
+.common-hint {
+  margin: 0 0 10px;
+}
+
+.common-hint a {
+  text-decoration: underline;
+}
+
+.common-search {
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 4px 10px 10px;
+}
+
+.common-search > summary {
+  cursor: pointer;
+  padding: 8px 2px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.common-search input {
+  margin-bottom: 8px;
+}
+
+.common-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.common-results li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.common-q {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+}
+
+.common-results .btn {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+}
+
+.badge.common {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.scope-check {
+  margin-bottom: 10px;
+}
+
 /* ---------- 質問の詳細 ---------- */
 
 .detail-body {

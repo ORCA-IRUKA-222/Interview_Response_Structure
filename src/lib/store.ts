@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { Anchor, Data, Interview, Question, Settings } from '../types';
-import { createInterview, createQuestion, descendantIds, emptyData, remapChildAnchors } from './model';
+import {
+  COMMON_ID,
+  copySubtree,
+  createInterview,
+  createQuestion,
+  descendantIds,
+  emptyData,
+  remapChildAnchors,
+} from './model';
 import { mergeData, parseData } from './merge';
 import { gradeCard } from './srs';
 
@@ -79,6 +87,17 @@ let state: AppState = {
   rev: 0,
 };
 
+/**
+ * 「共通」を必ず 1 つ持たせる。updatedAt を 0 にしておくので、すでに別端末で作られた
+ * 本物(編集済み)があれば統合時に必ずそちらが勝ち、無駄な同期差分も生まない。
+ */
+function withCommon(data: Data): Data {
+  if (data.interviews.some((i) => i.id === COMMON_ID)) return data;
+  const common = createInterview({ id: COMMON_ID, kind: 'common', title: '共通', company: '', createdAt: 0, updatedAt: 0 });
+  return { ...data, interviews: [common, ...data.interviews] };
+}
+state = { ...state, data: withCommon(state.data) };
+
 const listeners = new Set<() => void>();
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 /** 変更が Gist に未送信か。同期完了まで true */
@@ -144,7 +163,7 @@ export function setSyncState(patch: Partial<SyncState>) {
 
 /** 同期結果（統合済みデータ）を取り込む。local=false なので未送信扱いにはしない */
 export function applyRemoteMerge(remote: Data) {
-  const merged = mergeData(state.data, remote);
+  const merged = withCommon(mergeData(state.data, remote));
   setData(merged, { local: false });
 }
 
@@ -193,6 +212,7 @@ export function updateInterview(id: string, patch: Partial<Interview>) {
 }
 
 export function deleteInterview(id: string) {
+  if (id === COMMON_ID) return; // 共通は消せない
   const { data } = state;
   const now = Date.now();
   const deleted = { ...data.deleted, [id]: now };
@@ -237,6 +257,14 @@ export function deleteQuestion(id: string) {
   setData({ ...data, questions: data.questions.filter((q) => !ids.has(q.id)), deleted }, { local: true });
 }
 
+/** 質問(と深掘り)を別の面接へコピーする。共通の質問を会社ごとの面接に取り込むのに使う */
+export function copyQuestionTree(sourceId: string, targetInterviewId: string, parentId: string | null = null): string {
+  const { data } = state;
+  const { copies, rootId } = copySubtree(data.questions, sourceId, targetInterviewId, parentId);
+  setData({ ...data, questions: [...data.questions, ...copies] }, { local: true });
+  return rootId;
+}
+
 export function gradeQuestion(id: string, known: boolean) {
   const { data } = state;
   const now = Date.now();
@@ -252,11 +280,11 @@ export function gradeQuestion(id: string, known: boolean) {
 /** JSON の取り込み。既存データとは id 単位で統合する */
 export function importData(raw: unknown) {
   const incoming = parseData(raw);
-  setData(mergeData(state.data, incoming), { local: true });
+  setData(withCommon(mergeData(state.data, incoming)), { local: true });
 }
 
 export function clearLocalData() {
-  setData(emptyData(), { local: false });
+  setData(withCommon(emptyData()), { local: false });
   dirty = false;
   flushSave();
 }
