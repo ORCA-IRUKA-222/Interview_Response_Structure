@@ -1,9 +1,28 @@
 /* アプリ本体(同一オリジンの GET)だけをキャッシュするシンプルな Service Worker。
-   - 通信できるときは最新を取りに行き、オフライン時はキャッシュで起動する(network-first)
+   - インストール時に起動に必要なファイル(index.html とそこから参照される JS/CSS/アイコン)を先に保存する
+   - 通信できるときは最新を取りに行き、通信できないときはキャッシュで起動する(network-first)
    - GitHub API(別オリジン)は一切キャッシュしない */
-const CACHE = 'interview-note-v1';
+const CACHE = 'interview-note-v2';
 
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE);
+        const res = await fetch('./', { cache: 'reload' });
+        if (!res.ok) return; // 404 などはキャッシュしない
+        const html = await res.clone().text();
+        await cache.put('./', res);
+        const urls = [...html.matchAll(/(?:src|href)="(\.\/[^"#?]+)"/g)].map((m) => m[1]);
+        await Promise.all([...new Set(urls)].map((u) => cache.add(u).catch(() => undefined)));
+      } catch {
+        /* 先読みに失敗してもインストール自体は続ける(実行時キャッシュで補う) */
+      } finally {
+        await self.skipWaiting();
+      }
+    })(),
+  );
+});
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -28,8 +47,14 @@ self.addEventListener('fetch', (event) => {
         }
         return res;
       })
-      .catch(() =>
-        caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('./') : undefined)),
-      ),
+      .catch(async () => {
+        const hit = await caches.match(req, { ignoreSearch: req.mode === 'navigate' });
+        if (hit) return hit;
+        if (req.mode === 'navigate') {
+          const shell = await caches.match('./');
+          if (shell) return shell;
+        }
+        return Response.error();
+      }),
   );
 });
